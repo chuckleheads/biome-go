@@ -74,6 +74,7 @@ func initConfig() {
 		}
 
 		// Search config in home directory with name ".bio" (without extension).
+		viper.AddConfigPath(filepath.Join(home, ".hab", "etc")) // Preserve legacy behavior
 		viper.AddConfigPath(filepath.Join(home, ".bio", "etc"))
 		viper.SetConfigName("cli")
 	}
