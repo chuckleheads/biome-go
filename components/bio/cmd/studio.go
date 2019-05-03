@@ -46,12 +46,16 @@ var studioCmd = &cobra.Command{
 			panic(err)
 		}
 		containerName := generateContainerName(dir)
+		cli, err := client.NewEnvClient()
+		if err != nil {
+			panic(err)
+		}
 		// Run the container first
-		executeDocker(runContainer(args, dir, containerName))
+		executeDocker(runContainer(cli, args, dir, containerName))
 
 		// At this point the container has exited. We need to commit the changes.
-		commitContainer(containerName)
-		removeContainer(containerName)
+		commitContainer(cli, containerName)
+		removeContainer(cli, containerName)
 	},
 }
 
@@ -99,7 +103,7 @@ func generateContainerName(dir string) string {
 	return strings.ToLower(strings.Replace(strings.TrimPrefix(dir, "/"), "/", "--", -1))
 }
 
-func runContainer(args []string, currDir string, containerName string) []string {
+func runContainer(cli *client.Client, args []string, currDir string, containerName string) []string {
 	cmdArgs := []string{"run"}
 
 	cmdArgs = append(cmdArgs, "--name", containerName)
@@ -125,7 +129,7 @@ func runContainer(args []string, currDir string, containerName string) []string 
 	for _, volume := range volumes {
 		cmdArgs = append(cmdArgs, "--volume", volume)
 	}
-	if containerExists(containerName) {
+	if containerExists(cli, containerName) {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("bio-studio.local/%s:latest", containerName))
 	} else {
 		cmdArgs = append(cmdArgs, habStudioImage)
@@ -140,11 +144,7 @@ func runContainer(args []string, currDir string, containerName string) []string 
 	return cmdArgs
 }
 
-func containerExists(containerName string) bool {
-	cli, err := client.NewEnvClient()
-	if err != nil {
-		panic(err)
-	}
+func containerExists(cli *client.Client, containerName string) bool {
 	args := filters.NewArgs()
 	args.Add("reference", fmt.Sprintf("bio-studio.local/%s:latest", containerName))
 	images, err := cli.ImageList(context.Background(), types.ImageListOptions{Filters: args})
@@ -157,23 +157,15 @@ func containerExists(containerName string) bool {
 	return false
 }
 
-func commitContainer(containerName string) {
-	cli, err := client.NewEnvClient()
-	if err != nil {
-		panic(err)
-	}
-	_, err = cli.ContainerCommit(context.Background(), containerName, types.ContainerCommitOptions{Reference: fmt.Sprintf("bio-studio.local/%s:latest", containerName)})
+func commitContainer(cli *client.Client, containerName string) {
+	_, err := cli.ContainerCommit(context.Background(), containerName, types.ContainerCommitOptions{Reference: fmt.Sprintf("bio-studio.local/%s:latest", containerName)})
 	if err != nil {
 		panic(err)
 	}
 }
 
-func removeContainer(containerName string) {
-	cli, err := client.NewEnvClient()
-	if err != nil {
-		panic(err)
-	}
-	err = cli.ContainerRemove(context.Background(), containerName, types.ContainerRemoveOptions{RemoveVolumes: true})
+func removeContainer(cli *client.Client, containerName string) {
+	err := cli.ContainerRemove(context.Background(), containerName, types.ContainerRemoveOptions{RemoveVolumes: true})
 	if err != nil {
 		panic(err)
 	}
