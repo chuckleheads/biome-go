@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"encoding/base64"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/biome-sh/biome-go/components/bio/pkg/crypto"
+	"github.com/biome-sh/biome-go/components/bio/pkg/fs"
 )
 
 type KeyType int
@@ -16,6 +18,8 @@ const (
 	Box
 	Sym
 )
+
+const cacheKeyPathEnvVar = "CACHE_KEY_PATH"
 
 type Key struct {
 	Name   string
@@ -123,4 +127,13 @@ func KeyFromString(keystr string) Key {
 
 	key.Key = keyBytes
 	return key
+}
+
+// DefaultCachePeyPath returns the default cache key path or the environment variable override value
+func DefaultCacheKeyPath() string {
+	val, present := os.LookupEnv(cacheKeyPathEnvVar)
+	if present {
+		return val
+	}
+	return fs.GetCacheKeyPath()
 }
