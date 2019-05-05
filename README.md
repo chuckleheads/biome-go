@@ -14,4 +14,7 @@ This is very much an experiment but contributions are welcome.
 * `bio pkg hash <FILE>`
 * `bio pkg install <ident>` ** without signing verification
 * `bio pkg install some.hart`** without signing verification
+* `bio studio enter`
+* `bio studio build`
+* `bio studio rm`
 
