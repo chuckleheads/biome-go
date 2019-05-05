@@ -20,10 +20,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/biome-sh/biome-go/components/bio/config"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/biome-sh/biome-go/components/bio/config"
+	"github.com/biome-sh/biome-go/components/bio/pkg/ui"
 )
 
 var cfgFile string
@@ -38,8 +40,7 @@ var rootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		ui.Fatal(err)
 	}
 }
 

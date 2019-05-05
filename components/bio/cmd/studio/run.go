@@ -31,12 +31,12 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // These should 100% be piped through viper
 const habStudioSecret = "HAB_STUDIO_SECRET_"
 const habStudioImage = "habitat/default-studio-x86_64-linux:0.79.1"
-const artifactPathEnvVar = "ARTIFACT_PATH"
 
 // RunCmd ...
 var RunCmd = &cobra.Command{
@@ -125,15 +125,10 @@ func runContainer(cli *client.Client, args []string, currDir string, containerNa
 		cmdArgs = append(cmdArgs, "--env", fmt.Sprintf("%s=%s", envVar, os.Getenv(envVar)))
 	}
 
-	volumes := []string{fmt.Sprintf("%s:%s",
-		currDir,
-		"/src"),
-		fmt.Sprintf("%s:/%s",
-			keys.DefaultCacheKeyPath(),
-			fs.CacheKeyPath)}
-	cacheArtifactPath, present := os.LookupEnv(artifactPathEnvVar)
-	if present {
-		volumes = append(volumes, fmt.Sprintf("%s:/%s", cacheArtifactPath, fs.CacheArtifactPath))
+	volumes := []string{
+		fmt.Sprintf("%s:/%s", currDir, "src"),
+		fmt.Sprintf("%s:/%s", keys.DefaultCacheKeyPath(), fs.CacheKeyPath),
+		fmt.Sprintf("%s:/%s", viper.GetString("artifact_cache"), fs.CacheArtifactPath),
 	}
 
 	for _, volume := range volumes {
