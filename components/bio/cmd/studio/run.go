@@ -16,6 +16,7 @@ package studio
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -98,7 +99,7 @@ func parseEnvVars() []string {
 func findDocker() string {
 	path, err := exec.LookPath("docker")
 	if err != nil {
-		panic("Docker was not found on your path. Please install it")
+		ui.Fatal(errors.New("Docker was not found on your path. Please install it"))
 	}
 	return path
 }
@@ -163,7 +164,7 @@ func containerExists(cli *client.Client, containerName string) bool {
 	args.Add("reference", generateImageName(containerName))
 	images, err := cli.ImageList(context.Background(), types.ImageListOptions{Filters: args})
 	if err != nil {
-		panic(err)
+		ui.Warn(err.Error())
 	}
 	if len(images) == 1 {
 		return true
@@ -174,13 +175,13 @@ func containerExists(cli *client.Client, containerName string) bool {
 func commitContainer(cli *client.Client, containerName string) {
 	_, err := cli.ContainerCommit(context.Background(), containerName, types.ContainerCommitOptions{Reference: generateImageName(containerName)})
 	if err != nil {
-		panic(err)
+		ui.Warn(err.Error())
 	}
 }
 
 func removeContainer(cli *client.Client, containerName string) {
 	err := cli.ContainerRemove(context.Background(), containerName, types.ContainerRemoveOptions{RemoveVolumes: true})
 	if err != nil {
-		panic(err)
+		ui.Warn(err.Error())
 	}
 }
